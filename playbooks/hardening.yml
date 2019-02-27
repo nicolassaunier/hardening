@@ -1,0 +1,5 @@
+- name: Hardening Linux
+  hosts: all
+  become: root
+  roles:
+   - role: hardening

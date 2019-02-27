@@ -1,0 +1,5 @@
+---
+ansible_user: "root"
+ansible_ssh_pass: "asp784512AQW!"
+ansible_sudo_pass: "asp784512AQW!"
+ansible_become: true

@@ -1,0 +1,6 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  roles:
+    - role: resmo.ntp
+      ntp_config_server: [0.fr.pool.ntp.org, 1.fr.pool.ntp.org, 2.fr.pool.ntp.org, 3.fr.pool.ntp.org]

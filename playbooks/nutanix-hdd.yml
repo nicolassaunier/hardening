@@ -1,0 +1,5 @@
+- name: Nutanix Add/Delete disk
+  hosts: all
+  become: root
+  roles:
+   - role: nutanix-hdd

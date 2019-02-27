@@ -1,0 +1,6 @@
+- name: Automation Unibail
+  hosts: test
+  become: root
+  roles:
+   - role: automation
+   - role: rhnregister
