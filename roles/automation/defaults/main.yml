@@ -1,0 +1,5 @@
+---
+# defaults file for automation
+automation_version: "0.1"
+password: $1$salt$N3c.GRl1zzDjflSSdDWDY.
+user: zzautomation

@@ -1,0 +1,145 @@
+---
+- name: Create user zzautomation
+  user: name={{user}} password={{password}} state=present
+
+- name: Add sudoers
+  blockinfile:
+    path: /etc/sudoers
+    insertafter: EOF
+    content: "zzautomation        ALL=(ALL)       ALL" 
+    validate: 'visudo -cf %s'
+
+- name: Add sysctl rules
+  blockinfile:
+   path: /etc/sysctl.conf
+   insertafter: EOF
+   block: |
+          # Enable IP spoofing protection
+          net.ipv4.conf.all.rp_filter=1s
+            
+          # Disable IP source routing
+          net.ipv4.conf.all.accept_source_route=0
+            
+          # Ignoring broadcast request
+          net.ipv4.icmp_echo_ignore_broadcasts=1
+          net.ipv4.icmp_ignore_bogus_error_messages=1
+           
+          # Make surespoofed packets get logged
+          net.ipv4.conf.all.log_martians=1
+            
+          # limit SYN Flooding
+          net.ipv4.tcp_syncookies=1
+            
+          # Reject ICMP redirection
+          net.ipv4.conf.all.accept_redirects=0
+          net.ipv4.conf.all.secure_redirects=0
+
+- name: Add zzunimotd
+  copy:
+   src: files/zzunimotd.sh
+   dest: /etc/profile.d/zzunimotd.sh
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Add uniroles
+  copy:
+   src: files/uniroles
+   dest: /etc/profile.d/uniroles
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Add unibash
+  copy:
+   src: files/unibash.sh
+   dest: /etc/profile.d/unibash.sh
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Change grub.cfg attribute
+  file:
+   path: /boot/grub2/grub.cfg
+   mode: 0600
+
+- name: Change ssh rules
+  replace:
+   path: /etc/ssh/sshd_config
+   regexp: "{{ item.regexp }}"
+   replace: "{{ item.line }}"
+  with_items:
+    - { regexp: '^#Port 22$', line: 'Port 22' }
+    - { regexp: '^#Protocol 2$', line: 'Protocol 2' }
+    - { regexp: '^#PermitRootLogin yes$', line: 'PermitRootLogin no' }
+
+- name: Add ssh rules - AllowUsers
+  blockinfile:
+    path: /etc/ssh/sshd_config
+    insertafter: EOF
+    content: "AllowUsers zzautomation"
+
+- name: Disable USB mount 
+  copy:
+   src: files/usb-storage.conf
+   dest: /etc/modprobe.d/usb-storage.conf
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Disable DCCP 
+  copy:
+   src: files/dccp.conf
+   dest: /etc/modprobe.d/dccp.conf
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Disable SCTP
+  copy:
+   src: files/sctp.conf
+   dest: /etc/modprobe.d/sctp.conf
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Disable RDS
+  copy:
+   src: files/rds.conf
+   dest: /etc/modprobe.d/rds.conf
+   owner: root
+   group: root
+   mode: 0644
+
+- name: Disable TIPC
+  copy:
+   src: files/tipc.conf
+   dest: /etc/modprobe.d/tipc.conf
+   owner: root
+   group: root
+   mode: 0644
+
+- name: install mount option
+  replace:
+   path: /etc/fstab
+   regexp: "{{ item.regexp }}"
+   replace: "{{ item.line }}"
+  with_items:
+    - { regexp: '/tmp                    ext4    defaults', line: '/tmp ext4 rw,nosuid,nodev,noexec' }
+    - { regexp: '/var                    ext4    defaults', line: '/var ext4 rw,nosuid,nodev' }
+    - { regexp: '/home                   ext4    defaults', line: '/home ext4 rw,nosuid,nodev' }
+    - { regexp: '/boot                   ext4    defaults', line: '/boot ext4 ro' }
+
+- name: Add /var/tmp
+  blockinfile:
+    path: /etc/fstab
+    insertafter: EOF
+    content: "/tmp /var/tmp none rw,noexec,nosuid,nodev,bind 0 0"
+
+- name: restart machine
+  shell: sleep 2 && reboot
+  async: 1
+  poll: 0
+
+- name: waiting for server to come back
+  local_action: wait_for host={{ inventory_hostname }} state=started port=22 delay=30 timeout=300 connect_timeout=15

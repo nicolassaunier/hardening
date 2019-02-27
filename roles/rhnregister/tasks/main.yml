@@ -1,0 +1,15 @@
+---
+- name: Add proxy subscription manager
+  replace:
+   path: /etc/rhsm/rhsm.conf
+   regexp: "{{ item.regexp }}"
+   replace: "{{ item.line }}"
+  with_items:
+    - { regexp: 'proxy_hostname =', line: 'proxy_hostname = proxy-internet' }
+    - { regexp: 'proxy_port =', line: 'proxy_port = 8080' }
+
+- name: Add register RHN
+  rhn_register:
+    state: present
+    username: unibail
+    password: centos2008
